@@ -83,3 +83,27 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func RequireWriteAccess() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		method := c.Request.Method
+		if method == "POST" || method == "PUT" || method == "DELETE" || method == "PATCH" {
+			if strings.HasSuffix(c.Request.URL.Path, "/login") {
+				c.Next()
+				return
+			}
+
+			role, exists := c.Get("role")
+			if exists {
+				if roleStr, ok := role.(string); ok {
+					if strings.EqualFold(roleStr, "Viewer") || strings.EqualFold(roleStr, "ViewOnly") || strings.EqualFold(roleStr, "Guest") {
+						RespondError(c, http.StatusForbidden, "Forbidden", "Akses Ditolak: User Viewer hanya memiliki akses baca (Read-Only)")
+						c.Abort()
+						return
+					}
+				}
+			}
+		}
+		c.Next()
+	}
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Plus, Edit2, Trash2, Users, Calendar, X, AlertCircle } from 'lucide-react';
-import { apiFetch } from '../utils/api';
+import { apiFetch, isViewerUser } from '../utils/api';
 import { formatDateID } from '../utils/formatters';
 
 export default function CustomerPage() {
@@ -26,12 +26,12 @@ export default function CustomerPage() {
   }, []);
 
   const fetchCustomers = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const res = await apiFetch('/customers');
-      if (res.success) setCustomers(res.data);
+      setCustomers(res.data || []);
     } catch (err) {
-      console.error('Failed to load customers:', err);
+      console.error('Failed to fetch customers:', err);
     } finally {
       setLoading(false);
     }
@@ -41,8 +41,8 @@ export default function CustomerPage() {
     setEditingCustomer(null);
     setFormData({
       customer_name: '',
-      customer_start_contract: new Date().toISOString().split('T')[0],
-      customer_end_contract: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      customer_start_contract: '',
+      customer_end_contract: '',
     });
     setError('');
     setIsModalOpen(true);
@@ -51,9 +51,9 @@ export default function CustomerPage() {
   const handleOpenEdit = (cust) => {
     setEditingCustomer(cust);
     setFormData({
-      customer_name: cust.customer_name,
-      customer_start_contract: cust.customer_start_contract,
-      customer_end_contract: cust.customer_end_contract,
+      customer_name: cust.customer_name || '',
+      customer_start_contract: cust.customer_start_contract ? cust.customer_start_contract.split('T')[0] : '',
+      customer_end_contract: cust.customer_end_contract ? cust.customer_end_contract.split('T')[0] : '',
     });
     setError('');
     setIsModalOpen(true);
@@ -69,6 +69,12 @@ export default function CustomerPage() {
     setSubmitting(true);
     setError('');
 
+    const payload = {
+      customer_name: formData.customer_name.trim(),
+      customer_start_contract: formData.customer_start_contract || null,
+      customer_end_contract: formData.customer_end_contract || null,
+    };
+
     try {
       if (editingCustomer) {
         if (!window.confirm(`Apakah Anda yakin ingin memperbarui data Customer "${formData.customer_name}"?`)) {
@@ -77,12 +83,12 @@ export default function CustomerPage() {
         }
         await apiFetch(`/customers/${editingCustomer.id_customer}`, {
           method: 'PUT',
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
       } else {
         await apiFetch('/customers', {
           method: 'POST',
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
       }
 
@@ -97,6 +103,7 @@ export default function CustomerPage() {
 
   const handleConfirmDelete = async () => {
     if (!deletingID) return;
+    setSubmitting(true);
     try {
       await apiFetch(`/customers/${deletingID}`, { method: 'DELETE' });
       setIsDeleteModalOpen(false);
@@ -104,6 +111,8 @@ export default function CustomerPage() {
       fetchCustomers();
     } catch (err) {
       alert(err.message || 'Failed to delete customer');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -112,20 +121,23 @@ export default function CustomerPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Customer Master Data
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <Building2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            Customer Bank Master Data
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Manage enterprise customer accounts and project contract validity periods
+            Kelola Enterprise Client & Perbankan beserta masa berlaku kontrak penempatan
           </p>
         </div>
 
-        <button
-          onClick={handleOpenAdd}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-lg shadow-blue-500/20 transition-all self-start sm:self-auto"
-        >
-          <Plus className="h-4 w-4" /> Add Customer Account
-        </button>
+        {!isViewerUser() && (
+          <button
+            onClick={handleOpenAdd}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-lg shadow-blue-500/20 transition-all self-start sm:self-auto"
+          >
+            <Plus className="h-4 w-4" /> Add Customer Account
+          </button>
+        )}
       </div>
 
       {/* Customer Cards Grid */}
@@ -159,25 +171,31 @@ export default function CustomerPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => handleOpenEdit(cust)}
-                    className="p-2 rounded-xl text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/60 transition-colors"
-                    title="Edit Customer"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setDeletingID(cust.id_customer);
-                      setIsDeleteModalOpen(true);
-                    }}
-                    className="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors"
-                    title="Delete Customer"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+                {!isViewerUser() ? (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleOpenEdit(cust)}
+                      className="p-2 rounded-xl text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/60 transition-colors"
+                      title="Edit Customer"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDeletingID(cust.id_customer);
+                        setIsDeleteModalOpen(true);
+                      }}
+                      className="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors"
+                      title="Delete Customer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-[10px]">
+                    👁️ Read-Only
+                  </span>
+                )}
               </div>
 
               {/* Contract Validity Period */}

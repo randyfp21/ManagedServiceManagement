@@ -1,5 +1,10 @@
+import { isViewerUser } from './api';
+
 // IDR Currency Formatter matching standard Indonesian format: Rp 5.000.000,00
-export const formatIDR = (val, showDecimals = true) => {
+export const formatIDR = (val, showDecimals = true, forceUnmask = false) => {
+  if (!forceUnmask && isViewerUser()) {
+    return 'Rp ••••••••';
+  }
   if (val === null || val === undefined || isNaN(val)) {
     return showDecimals ? 'Rp 0,00' : 'Rp 0';
   }

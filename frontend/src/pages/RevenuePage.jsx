@@ -27,7 +27,7 @@ import {
   Layers,
   ChevronRight
 } from 'lucide-react';
-import { apiFetch } from '../utils/api';
+import { apiFetch, isViewerUser } from '../utils/api';
 import { formatIDR, getMarginBadge, formatDateID } from '../utils/formatters';
 
 export default function RevenuePage() {
@@ -746,14 +746,20 @@ export default function RevenuePage() {
                                 </span>
                               </td>
                               <td className="px-4 py-3.5 text-center whitespace-nowrap">
-                                <button
-                                  onClick={() => handleOpenEditModal(emp)}
-                                  className="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 transition-all font-bold text-[11px] flex items-center gap-1.5 mx-auto border border-blue-200 dark:border-blue-800"
-                                  title="Edit Data Finansial & Alokasi"
-                                >
-                                  <Edit2 className="h-3 w-3" />
-                                  <span>Edit</span>
-                                </button>
+                                {isViewerUser() ? (
+                                  <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-[10px]">
+                                    👁️ Read-Only
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={() => handleOpenEditModal(emp)}
+                                    className="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 transition-all font-bold text-[11px] flex items-center gap-1.5 mx-auto border border-blue-200 dark:border-blue-800"
+                                    title="Edit Data Finansial & Alokasi"
+                                  >
+                                    <Edit2 className="h-3 w-3" />
+                                    <span>Edit</span>
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           );
@@ -892,14 +898,20 @@ export default function RevenuePage() {
                         </span>
                       </td>
                       <td className="px-4 py-3.5 text-center whitespace-nowrap">
-                        <button
-                          onClick={() => handleOpenEditModal(item)}
-                          className="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 transition-all font-bold text-[11px] flex items-center gap-1.5 mx-auto border border-blue-200 dark:border-blue-800"
-                          title="Edit Data Finansial & Alokasi"
-                        >
-                          <Edit2 className="h-3 w-3" />
-                          <span>Edit</span>
-                        </button>
+                        {isViewerUser() ? (
+                          <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-[10px]">
+                            👁️ Read-Only
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleOpenEditModal(item)}
+                            className="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 transition-all font-bold text-[11px] flex items-center gap-1.5 mx-auto border border-blue-200 dark:border-blue-800"
+                            title="Edit Data Finansial & Alokasi"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                            <span>Edit</span>
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

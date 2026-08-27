@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FolderGit2, Plus, Edit2, Trash2, Users, X, AlertCircle, Tag } from 'lucide-react';
-import { apiFetch } from '../utils/api';
+import { apiFetch, isViewerUser } from '../utils/api';
 
 export default function GroupPage() {
   const [groups, setGroups] = useState([]);
@@ -114,12 +114,14 @@ export default function GroupPage() {
           </p>
         </div>
 
-        <button
-          onClick={handleOpenAdd}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-lg shadow-blue-500/20 transition-all self-start sm:self-auto"
-        >
-          <Plus className="h-4 w-4" /> Add New Group
-        </button>
+        {!isViewerUser() && (
+          <button
+            onClick={handleOpenAdd}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-lg shadow-blue-500/20 transition-all self-start sm:self-auto"
+          >
+            <Plus className="h-4 w-4" /> Add New Group
+          </button>
+        )}
       </div>
 
       {/* Group Cards / Grid */}
@@ -166,25 +168,31 @@ export default function GroupPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => handleOpenEdit(group)}
-                    className="p-2 rounded-xl text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/60 transition-colors"
-                    title="Edit Group"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setDeletingID(group.id_group);
-                      setIsDeleteModalOpen(true);
-                    }}
-                    className="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors"
-                    title="Delete Group"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+                {!isViewerUser() ? (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleOpenEdit(group)}
+                      className="p-2 rounded-xl text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/60 transition-colors"
+                      title="Edit Group"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDeletingID(group.id_group);
+                        setIsDeleteModalOpen(true);
+                      }}
+                      className="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors"
+                      title="Delete Group"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-[10px]">
+                    👁️ Read-Only
+                  </span>
+                )}
               </div>
             );
           })

@@ -37,6 +37,7 @@ func main() {
 	// Protected routes
 	protected := api.Group("")
 	protected.Use(middleware.AuthMiddleware())
+	protected.Use(middleware.RequireWriteAccess())
 	{
 		// Profile
 		protected.GET("/auth/me", handlers.GetMe)

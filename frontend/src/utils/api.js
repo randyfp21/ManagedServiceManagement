@@ -20,6 +20,13 @@ export const getUser = () => {
   }
 };
 
+export const isViewerUser = () => {
+  const user = getUser();
+  if (!user || !user.role) return false;
+  const role = user.role.toString().toLowerCase();
+  return role === 'viewer' || role === 'viewonly' || role === 'guest';
+};
+
 export const setUser = (user) => {
   if (user) {
     localStorage.setItem('user', JSON.stringify(user));

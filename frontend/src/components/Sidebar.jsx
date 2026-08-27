@@ -16,7 +16,7 @@ import {
   ChevronRight,
   PanelLeftClose
 } from 'lucide-react';
-import { logout, getUser } from '../utils/api';
+import { logout, getUser, isViewerUser } from '../utils/api';
 
 const navItemsTop = [
   { path: '/', label: 'Dashboard Overview', icon: LayoutDashboard },
@@ -144,12 +144,18 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                 {user?.name ? user.name.charAt(0) : 'M'}
               </div>
               <div className="truncate">
-                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
-                  {user?.name || 'Resource Manager'}
+                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate flex items-center gap-1">
+                  <span>{user?.name || 'Resource Manager'}</span>
                 </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                  {user?.role || 'Manager'}
-                </p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className={`text-[10px] font-extrabold px-2 py-0.2 rounded-md ${
+                    isViewerUser()
+                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300'
+                      : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+                  }`}>
+                    {isViewerUser() ? '👁️ Viewer (Read-Only)' : user?.role || 'Manager'}
+                  </span>
+                </div>
               </div>
             </div>
             <button

@@ -62,9 +62,9 @@ func InitDB() *gorm.DB {
 
 func SeedData(db *gorm.DB) {
 	// Seed Admin User
-	var userCount int64
-	db.Model(&models.User{}).Count(&userCount)
-	if userCount == 0 {
+	var adminCount int64
+	db.Model(&models.User{}).Where("username = ?", "admin").Count(&adminCount)
+	if adminCount == 0 {
 		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
 		admin := models.User{
 			Username: "admin",
@@ -74,6 +74,21 @@ func SeedData(db *gorm.DB) {
 		}
 		db.Create(&admin)
 		log.Println("Seeded default admin user (admin / admin123)")
+	}
+
+	// Seed Viewer User
+	var viewerCount int64
+	db.Model(&models.User{}).Where("username = ?", "viewer").Count(&viewerCount)
+	if viewerCount == 0 {
+		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("viewer123"), bcrypt.DefaultCost)
+		viewer := models.User{
+			Username: "viewer",
+			Password: string(hashedPassword),
+			Name:     "Read-Only Viewer",
+			Role:     "Viewer",
+		}
+		db.Create(&viewer)
+		log.Println("Seeded default viewer user (viewer / viewer123)")
 	}
 
 	// Seed Groups (3 Records)

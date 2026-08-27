@@ -16,7 +16,7 @@ import {
   FileSpreadsheet,
   Activity
 } from 'lucide-react';
-import { apiFetch } from '../utils/api';
+import { apiFetch, isViewerUser } from '../utils/api';
 import { formatDateID } from '../utils/formatters';
 
 export default function AuditLogPage() {
@@ -402,7 +402,7 @@ export default function AuditLogPage() {
                           <Eye className="h-3.5 w-3.5" />
                           <span>Detail</span>
                         </button>
-                        {log.action !== 'REVERT' && log.action !== 'LOGIN' && (
+                        {!isViewerUser() && log.action !== 'REVERT' && log.action !== 'LOGIN' && (
                           <button
                             onClick={() => handleRevert(log)}
                             disabled={revertingId === log.id}
