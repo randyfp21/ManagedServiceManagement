@@ -210,7 +210,7 @@ export default function RevenuePage() {
     const revNett = Number(formData.revenue_nett) || 0;
 
     const directCost = gross + penempatan + keahlian;
-    const cogs = gross * koef;
+    const cogs = directCost * koef;
     const marginNominal = revNett - cogs;
     const marginPercent = revNett > 0 ? (marginNominal / revNett) * 100 : 0;
 
@@ -227,6 +227,28 @@ export default function RevenuePage() {
       status,
     };
   }, [formData]);
+
+  const getCogsFormulaTooltip = (emp) => {
+    const gross = emp.sallary_gross || 0;
+    const penempatan = emp.tunjangan_penempatan || 0;
+    const keahlian = emp.tunjangan_keahlian || 0;
+    const directCost = emp.total_direct_cost || (gross + penempatan + keahlian);
+    const koef = emp.koefisien || 1.4;
+    const cogs = emp.cogs || (directCost * koef);
+
+    return (
+      `ℹ️ INFORMASI RUMUS COGS & METRIK FINANSIAL (${emp.employee_name}):\n` +
+      `• Gaji Gross = ${formatIDR(gross, false)}\n` +
+      `• Tunjangan Penempatan = ${formatIDR(penempatan, false)}\n` +
+      `• Tunjangan Keahlian = ${formatIDR(keahlian, false)}\n` +
+      `----------------------------------------\n` +
+      `• Total Direct Cost = Gross + Penempatan + Keahlian = ${formatIDR(directCost, false)}\n` +
+      `• RUMUS COGS = Total Direct Cost (${formatIDR(directCost, false)}) × Koefisien (${koef})\n` +
+      `  = ${formatIDR(directCost, false)} × ${koef} = ${formatIDR(cogs, false)}\n` +
+      `• Revenue Nett = ${formatIDR(emp.revenue_nett, false)}\n` +
+      `• Margin Nominal = Revenue Nett - COGS = ${formatIDR(emp.margin_nominal, false)} (${emp.margin_percent?.toFixed(1) || 0}%)`
+    );
+  };
 
   const filteredItems = useMemo(() => {
     if (!analysis?.items) return [];
@@ -645,7 +667,7 @@ export default function RevenuePage() {
                           <th className="px-3 py-3">Tunj. Keahlian</th>
                           <th className="px-3 py-3 font-extrabold text-slate-800 dark:text-slate-200">Direct Cost</th>
                           <th className="px-2 py-3 text-center">Koef</th>
-                          <th className="px-3 py-3 font-extrabold text-slate-800 dark:text-slate-200">COGS</th>
+                          <th className="px-3 py-3 font-extrabold text-slate-800 dark:text-slate-200 cursor-help" title="Rumus COGS = Total Direct Cost (Gaji Gross + Tunjangan Penempatan + Tunjangan Keahlian) × Koefisien">COGS ℹ️</th>
                           <th className="px-3 py-3 font-extrabold text-blue-600 dark:text-blue-400">Revenue Nett</th>
                           <th className="px-3 py-3 font-extrabold text-emerald-600 dark:text-emerald-400">Margin (Rp)</th>
                           <th className="px-3 py-3 font-extrabold text-center text-emerald-600 dark:text-emerald-400">Margin (%)</th>
@@ -659,7 +681,8 @@ export default function RevenuePage() {
                           return (
                             <tr
                               key={emp.id_employee}
-                              className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                              title={getCogsFormulaTooltip(emp)}
+                              className="hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
                             >
                               <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-white">
                                 {emp.employee_name}
@@ -784,7 +807,7 @@ export default function RevenuePage() {
                   <th className="px-3 py-3.5">Tunj. Keahlian</th>
                   <th className="px-3 py-3.5 font-extrabold text-slate-800 dark:text-slate-200">Total Direct Cost</th>
                   <th className="px-2 py-3.5 text-center">Koef</th>
-                  <th className="px-3 py-3.5 font-extrabold text-slate-800 dark:text-slate-200">COGS</th>
+                  <th className="px-3 py-3.5 font-extrabold text-slate-800 dark:text-slate-200 cursor-help" title="Rumus COGS = Total Direct Cost (Gaji Gross + Tunjangan Penempatan + Tunjangan Keahlian) × Koefisien">COGS ℹ️</th>
                   <th className="px-3 py-3.5 font-extrabold text-blue-600 dark:text-blue-400">Revenue Nett</th>
                   <th className="px-3 py-3.5 font-extrabold text-emerald-600 dark:text-emerald-400">Margin (Rp)</th>
                   <th className="px-3 py-3.5 text-center font-extrabold text-emerald-600 dark:text-emerald-400">Margin (%)</th>
@@ -799,7 +822,8 @@ export default function RevenuePage() {
                   return (
                     <tr
                       key={item.id_employee}
-                      className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
+                      title={getCogsFormulaTooltip(item)}
+                      className={`hover:bg-blue-50/50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer ${
                         isBench ? 'bg-amber-50/20 dark:bg-amber-950/10' : ''
                       }`}
                     >

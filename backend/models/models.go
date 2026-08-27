@@ -119,7 +119,7 @@ func cleanDate(dStr string) string {
 // Helper calculation function
 func CalculateRevenueDetails(emp Employee) EmployeeRevenueAnalysis {
 	totalDirectCost := emp.SallaryGross + emp.TunjanganPenempatan + emp.TunjanganKeahlian
-	cogs := emp.SallaryGross * emp.Koefisien
+	cogs := totalDirectCost * emp.Koefisien
 	marginNominal := emp.RevenueNett - cogs
 
 	empStatus := emp.Status
