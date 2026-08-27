@@ -250,7 +250,10 @@ func TestEmployeeHandlers(t *testing.T) {
 	})
 
 	t.Run("Delete Employee", func(t *testing.T) {
-		req, _ := http.NewRequest("DELETE", "/api/employees/1", nil)
+		var targetEmp models.Employee
+		database.DB.Last(&targetEmp)
+
+		req, _ := http.NewRequest("DELETE", fmt.Sprintf("/api/employees/%d", targetEmp.IDEmployee), nil)
 		req.Header.Set("Authorization", authHeader)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
