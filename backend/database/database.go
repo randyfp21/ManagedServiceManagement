@@ -57,6 +57,23 @@ func InitDB() *gorm.DB {
 	}
 
 	log.Println("PostgreSQL Database connection established successfully.")
+
+	// AutoMigrate missing columns and tables safely without dropping data
+	err = DB.AutoMigrate(
+		&models.User{},
+		&models.Group{},
+		&models.Customer{},
+		&models.Employee{},
+		&models.PersonalNote{},
+		&models.AuditLog{},
+		&models.AssignmentHistory{},
+	)
+	if err != nil {
+		log.Printf("Warning during AutoMigrate: %v", err)
+	} else {
+		log.Println("Database AutoMigrate completed successfully.")
+	}
+
 	return DB
 }
 
