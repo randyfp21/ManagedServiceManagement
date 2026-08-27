@@ -442,46 +442,69 @@ export default function RevenuePage() {
 
       {/* Summary KPI Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Revenue Nett</span>
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Revenue Nett</span>
+            <div className="h-8 w-8 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+              <DollarSign className="h-4 w-4" />
+            </div>
+          </div>
           <p className="text-xl font-extrabold text-blue-600 dark:text-blue-400 mt-2 truncate tracking-tight">
             {formatIDR(filteredSummary.totalRevenue)}
           </p>
-          <span className="text-[11px] font-semibold text-slate-400 mt-1 block">Dari {filteredSummary.totalEmployees} Resource</span>
+          <span className="text-[11px] font-semibold text-slate-400 mt-1 block">Dari {filteredSummary.totalEmployees} Active Resource</span>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Direct Cost</span>
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Direct Cost</span>
+            <div className="h-8 w-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold">
+              <Calculator className="h-4 w-4" />
+            </div>
+          </div>
           <p className="text-xl font-extrabold text-slate-900 dark:text-white mt-2 truncate tracking-tight">
             {formatIDR(filteredSummary.totalDirectCost)}
           </p>
-          <span className="text-[11px] font-semibold text-slate-400 mt-1 block">Gross + Tunjangan</span>
+          <span className="text-[11px] font-semibold text-slate-400 mt-1 block">Gaji Gross + Tunjangan</span>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total COGS</span>
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total COGS</span>
+            <div className="h-8 w-8 rounded-xl bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+              <Layers className="h-4 w-4" />
+            </div>
+          </div>
           <p className="text-xl font-extrabold text-slate-900 dark:text-white mt-2 truncate tracking-tight">
             {formatIDR(filteredSummary.totalCOGS)}
           </p>
-          <span className="text-[11px] font-semibold text-slate-400 mt-1 block">Gross x Koefisien</span>
+          <span className="text-[11px] font-semibold text-slate-400 mt-1 block">Base (Gross x Koefisien)</span>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Net Profit Margin</span>
-          <div className="flex items-baseline justify-between mt-2 gap-1">
-            <span className={`text-xl font-extrabold truncate tracking-tight ${filteredSummary.marginNominal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-              {formatIDR(filteredSummary.marginNominal)}
-            </span>
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Net Profit Margin</span>
+            <div className="h-8 w-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+              <TrendingUp className="h-4 w-4" />
+            </div>
           </div>
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md mt-1">
+          <p className={`text-xl font-extrabold mt-2 truncate tracking-tight ${filteredSummary.marginNominal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+            {formatIDR(filteredSummary.marginNominal)}
+          </p>
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md mt-1 border border-emerald-200/60 dark:border-emerald-800/60">
             <ArrowUpRight className="h-3 w-3" />
             {filteredSummary.marginPct.toFixed(1)}% Profitability
           </span>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Resource Distribution</span>
-          <div className="flex items-center justify-between mt-2 text-xs font-bold">
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Resource Distribution</span>
+            <div className="h-8 w-8 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+              <Users className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="flex items-center justify-between mt-2 text-xs font-bold gap-2">
             <span className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800">
               <UserCheck className="h-3.5 w-3.5" />
               {filteredSummary.countActive} Active
