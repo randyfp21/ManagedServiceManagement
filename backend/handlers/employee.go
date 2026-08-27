@@ -262,6 +262,7 @@ func UpdateEmployee(c *gin.Context) {
 	emp.TunjanganPenempatan = req.TunjanganPenempatan
 	emp.TunjanganKeahlian = req.TunjanganKeahlian
 	emp.LastSalaryIncrementDate = req.LastSalaryIncrementDate
+	emp.Remarks = req.Remarks
 	if req.Koefisien != 0 {
 		emp.Koefisien = req.Koefisien
 	}

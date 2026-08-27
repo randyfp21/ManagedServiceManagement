@@ -167,6 +167,7 @@ export default function EmployeePage() {
       start_contract: new Date().toISOString().split('T')[0],
       end_contract: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       last_salary_increment_date: '',
+      remarks: '',
       sallary_gross: 10000000,
       tunjangan_penempatan: 1000000,
       tunjangan_keahlian: 1000000,
@@ -195,6 +196,7 @@ export default function EmployeePage() {
       start_contract: formatDateForInput(emp.start_contract),
       end_contract: formatDateForInput(emp.end_contract),
       last_salary_increment_date: formatDateForInput(emp.last_salary_increment_date),
+      remarks: emp.remarks || '',
       sallary_gross: emp.sallary_gross,
       tunjangan_penempatan: emp.tunjangan_penempatan,
       tunjangan_keahlian: emp.tunjangan_keahlian,
@@ -263,6 +265,7 @@ export default function EmployeePage() {
         end_contract: isPerm ? 'Permanent' : formData.end_contract,
         last_salary_increment_date: formData.last_salary_increment_date || '',
         is_permanent: isPerm,
+        remarks: formData.remarks || '',
         sallary_gross: Number(formData.sallary_gross),
         tunjangan_penempatan: Number(formData.tunjangan_penempatan),
         tunjangan_keahlian: Number(formData.tunjangan_keahlian),
@@ -600,19 +603,20 @@ export default function EmployeePage() {
                     {renderSortIcon('revenue_nett')}
                   </div>
                 </th>
+                <th className="px-4 py-3.5">Remarks (Catatan Manager)</th>
                 <th className="px-5 py-3.5 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
               {loading ? (
                 <tr>
-                  <td colSpan="10" className="px-5 py-12 text-center text-slate-400">
+                  <td colSpan="11" className="px-5 py-12 text-center text-slate-400">
                     Memuat data karyawan...
                   </td>
                 </tr>
               ) : employees.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="px-5 py-12 text-center text-slate-400 space-y-1">
+                  <td colSpan="11" className="px-5 py-12 text-center text-slate-400 space-y-1">
                     <p className="font-bold text-slate-700 dark:text-slate-300">
                       {selectedStatus === 'resign'
                         ? 'Tidak ada karyawan yang berstatus Resign'
@@ -660,12 +664,12 @@ export default function EmployeePage() {
 
                       <td className="px-4 py-3.5">
                         {emp.customer ? (
-                          <span className="font-medium text-slate-900 dark:text-slate-100">
+                          <span className="font-bold text-slate-900 dark:text-white">
                             {emp.customer.customer_name}
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[10px] font-bold">
-                            ⚠️ On Bench (Idle)
+                          <span className="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-extrabold text-[10px]">
+                            ⚠️ On Bench
                           </span>
                         )}
                       </td>
@@ -681,7 +685,7 @@ export default function EmployeePage() {
                       </td>
 
                       <td className="px-4 py-3.5 text-[11px] font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                        {emp.last_salary_increment_date ? formatDateID(emp.last_salary_increment_date) : '-'}
+                        {formatDateID(emp.last_salary_increment_date)}
                       </td>
 
                       <td className="px-4 py-3.5 font-medium whitespace-nowrap">
@@ -696,6 +700,10 @@ export default function EmployeePage() {
 
                       <td className="px-4 py-3.5 font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">
                         {formatIDR(emp.revenue_nett, false)}
+                      </td>
+
+                      <td className="px-4 py-3.5 max-w-[200px] truncate text-slate-500 italic text-[11px]" title={emp.remarks || ''}>
+                        {emp.remarks || '-'}
                       </td>
 
                       <td className="px-5 py-3.5 text-center whitespace-nowrap">
@@ -1027,6 +1035,19 @@ export default function EmployeePage() {
                     className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-blue-600 dark:text-blue-400"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                  Remarks (Catatan Manager ke Karyawan)
+                </label>
+                <textarea
+                  value={formData.remarks || ''}
+                  onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                  placeholder="Masukkan catatan internal manager mengenai karyawan ini..."
+                  rows={3}
+                  className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                />
               </div>
 
               <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
