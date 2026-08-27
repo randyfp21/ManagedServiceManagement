@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict vMkoTHBVKVMYEazmeiQvTMY9afidiq7aLNEQUtIdeWHt4cI3tbiRYw8Od3dh9dN
+\restrict nuVU9kA96CJNW3pN1gEuseuaGR6dgh2q1R7L9mG8DTwikTBB8jZb0L42yWhhUOj
 
 -- Dumped from database version 16.14 (Homebrew)
 -- Dumped by pg_dump version 16.14 (Homebrew)
@@ -831,6 +831,7 @@ COPY public.personal_notes (id, net_salary, tk0_k0, k1_k2, created_at, updated_a
 
 COPY public.users (id, username, password, name, role, created_at, updated_at) FROM stdin;
 1	admin	$2a$10$M8vtD0GXSHF/e34n.0W9YuvJYYsH9PigJrck5dciOOxMiERjulCPO	Resource Manager	Manager	2026-08-13 14:09:05.527082+07	2026-08-13 14:09:05.527082+07
+2	viewer	$2a$10$zlp0HDHGO96lvMdWzuLl0.8/Pfvc8nX12iJ6JyUUUPRa.Qm4ymCPy	Read-Only Viewer	Viewer	2026-08-27 15:36:36.003753+07	2026-08-27 15:36:36.003753+07
 \.
 
 
@@ -880,7 +881,7 @@ SELECT pg_catalog.setval('public.personal_notes_id_seq', 18, true);
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: user
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 1, true);
+SELECT pg_catalog.setval('public.users_id_seq', 2, true);
 
 
 --
@@ -979,5 +980,5 @@ REVOKE USAGE ON SCHEMA public FROM PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict vMkoTHBVKVMYEazmeiQvTMY9afidiq7aLNEQUtIdeWHt4cI3tbiRYw8Od3dh9dN
+\unrestrict nuVU9kA96CJNW3pN1gEuseuaGR6dgh2q1R7L9mG8DTwikTBB8jZb0L42yWhhUOj
 
