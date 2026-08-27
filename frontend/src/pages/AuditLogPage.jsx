@@ -48,9 +48,36 @@ export default function AuditLogPage() {
     item: null,
   });
 
+  const [revertingId, setRevertingId] = useState(null);
+  const [revertMsg, setRevertMsg] = useState('');
+
   useEffect(() => {
     fetchAuditLogs();
   }, [page, startDate, endDate, selectedEntity, selectedAction]);
+
+  const handleRevert = async (log) => {
+    if (!window.confirm(`Apakah Anda yakin ingin melakukan REVERT / UNDO untuk perubahan:\n"${log.summary}"?`)) {
+      return;
+    }
+    setRevertingId(log.id);
+    setRevertMsg('');
+    try {
+      const res = await apiFetch(`/audit-logs/${log.id}/revert`, { method: 'POST' });
+      if (res.success) {
+        setRevertMsg(res.message || 'Perubahan berhasil di-revert!');
+        fetchAuditLogs();
+        if (detailModal.open) {
+          setDetailModal({ open: false, item: null });
+        }
+      } else {
+        alert(`Gagal Revert: ${res.error || res.message}`);
+      }
+    } catch (err) {
+      alert(`Gagal Revert: ${err.message}`);
+    } finally {
+      setRevertingId(null);
+    }
+  };
 
   const fetchAuditLogs = async () => {
     setLoading(true);
@@ -129,6 +156,12 @@ export default function AuditLogPage() {
         return (
           <span className="px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-extrabold text-[10px] border border-purple-300 dark:border-purple-800">
             🟣 LOGIN
+          </span>
+        );
+      case 'REVERT':
+        return (
+          <span className="px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-extrabold text-[10px] border border-amber-300 dark:border-amber-800">
+            ↩️ REVERT
           </span>
         );
       default:
@@ -361,13 +394,26 @@ export default function AuditLogPage() {
                       {log.summary}
                     </td>
                     <td className="px-4 py-3.5 text-center">
-                      <button
-                        onClick={() => setDetailModal({ open: true, item: log })}
-                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-blue-600 dark:text-blue-400 font-bold transition-colors inline-flex items-center gap-1 text-[11px]"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        <span>Detail</span>
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => setDetailModal({ open: true, item: log })}
+                          className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-blue-600 dark:text-blue-400 font-bold transition-colors inline-flex items-center gap-1 text-[11px]"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>Detail</span>
+                        </button>
+                        {log.action !== 'REVERT' && log.action !== 'LOGIN' && (
+                          <button
+                            onClick={() => handleRevert(log)}
+                            disabled={revertingId === log.id}
+                            className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 text-amber-700 dark:text-amber-300 font-bold border border-amber-200 dark:border-amber-800 transition-colors inline-flex items-center gap-1 text-[11px] disabled:opacity-50"
+                            title="Revert / Undo Perubahan Ini"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            <span>{revertingId === log.id ? 'Reverting...' : 'Revert'}</span>
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

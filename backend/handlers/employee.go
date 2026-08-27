@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -191,7 +192,8 @@ func CreateEmployee(c *gin.Context) {
 	// Preload relationships for response
 	database.DB.Preload("Group").Preload("Customer").First(&emp, emp.IDEmployee)
 
-	LogAudit("CREATE", "Employee", fmt.Sprintf("%d", emp.IDEmployee), "Menambahkan karyawan baru: "+emp.EmployeeName+" ("+emp.EmployeeRole+")", fmt.Sprintf(`{"name":"%s","role":"%s","gross":%.2f}`, emp.EmployeeName, emp.EmployeeRole, emp.SallaryGross), "admin", c.ClientIP())
+	empBytes, _ := json.Marshal(emp)
+	LogAudit("CREATE", "Employee", fmt.Sprintf("%d", emp.IDEmployee), "Menambahkan karyawan baru: "+emp.EmployeeName+" ("+emp.EmployeeRole+")", string(empBytes), "admin", c.ClientIP())
 
 	middleware.RespondSuccess(c, http.StatusCreated, "Employee created successfully", emp)
 }
@@ -209,6 +211,7 @@ func UpdateEmployee(c *gin.Context) {
 		return
 	}
 
+	empSnapshot := emp
 	oldStatus := emp.Status
 
 	var req models.Employee
@@ -277,7 +280,12 @@ func UpdateEmployee(c *gin.Context) {
 		actionType = "STATUS_CHANGE"
 		summaryStr = fmt.Sprintf("Mengubah status karyawan %s dari %s menjadi %s", emp.EmployeeName, oldStatus, req.Status)
 	}
-	LogAudit(actionType, "Employee", fmt.Sprintf("%d", emp.IDEmployee), summaryStr, fmt.Sprintf(`{"name":"%s","status":"%s","gross":%.2f}`, emp.EmployeeName, emp.Status, emp.SallaryGross), "admin", c.ClientIP())
+
+	detailsJSON, _ := json.Marshal(map[string]interface{}{
+		"previous": empSnapshot,
+		"current":  emp,
+	})
+	LogAudit(actionType, "Employee", fmt.Sprintf("%d", emp.IDEmployee), summaryStr, string(detailsJSON), "admin", c.ClientIP())
 
 	middleware.RespondSuccess(c, http.StatusOK, "Employee updated successfully", emp)
 }
@@ -289,12 +297,20 @@ func DeleteEmployee(c *gin.Context) {
 		return
 	}
 
-	if err := database.DB.Delete(&models.Employee{}, id).Error; err != nil {
+	var emp models.Employee
+	if err := database.DB.Preload("Group").Preload("Customer").First(&emp, id).Error; err != nil {
+		middleware.RespondError(c, http.StatusNotFound, "Not Found", "Employee not found")
+		return
+	}
+
+	empBytes, _ := json.Marshal(emp)
+
+	if err := database.DB.Delete(&emp).Error; err != nil {
 		middleware.RespondError(c, http.StatusInternalServerError, "Internal Server Error", err.Error())
 		return
 	}
 
-	LogAudit("DELETE", "Employee", fmt.Sprintf("%d", id), fmt.Sprintf("Menghapus data karyawan ID %d", id), fmt.Sprintf(`{"id":%d}`, id), "admin", c.ClientIP())
+	LogAudit("DELETE", "Employee", fmt.Sprintf("%d", id), fmt.Sprintf("Menghapus data karyawan %s (ID %d)", emp.EmployeeName, id), string(empBytes), "admin", c.ClientIP())
 
 	middleware.RespondSuccess(c, http.StatusOK, "Employee deleted successfully", nil)
 }

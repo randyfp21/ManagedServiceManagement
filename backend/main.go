@@ -96,6 +96,8 @@ func main() {
 		protected.GET("/audit-logs", handlers.GetAuditLogs)
 		protected.GET("/v1/audit-logs", handlers.GetAuditLogs)
 		protected.POST("/v1/audit-logs/sample", handlers.SeedSampleAuditLog)
+		protected.POST("/audit-logs/:id/revert", handlers.RevertAuditLog)
+		protected.POST("/v1/audit-logs/:id/revert", handlers.RevertAuditLog)
 	}
 
 	port := os.Getenv("PORT")
