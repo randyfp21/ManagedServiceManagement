@@ -107,29 +107,32 @@ export default function TimelinePage() {
     );
   }, [timelineData, searchQuery]);
 
-  // Map exact 6 color states matching user PRD revision
+  // Map color states matching user specs
   const getCellColorClass = (cellStatus) => {
     switch (cellStatus) {
       case 'NOT_YET_JOINED':
-        // Greyout: Belum Join
+        // Belum Join: Greyout terang
+        return 'bg-slate-300 dark:bg-slate-700 text-slate-500 hover:bg-slate-400';
+      case 'CONTRACT_EXPIRED_AFTER':
+        // Setelah Kontrak Habis (setelah minggu CO): Greyout gelap
         return 'bg-slate-400 dark:bg-slate-600 text-slate-100 hover:bg-slate-500';
       case 'PAST_DAYS':
-        // Hijau Muda: Hari yang dilalui
-        return 'bg-emerald-200/90 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200 hover:bg-emerald-300';
-      case 'ONBOARDING':
-        // Hijau Tua: Onboarding (OBD)
-        return 'bg-emerald-600 text-white font-extrabold text-[10px] hover:bg-emerald-700 shadow-xs';
-      case 'PO_EXPIRED':
-        // Biru: PO Habis (PO)
-        return 'bg-blue-600 text-white font-extrabold text-[10px] hover:bg-blue-700 shadow-xs';
       case 'FUTURE_DAYS':
-        // Kuning: Hari belum dilalui
-        return 'bg-amber-300 dark:bg-amber-600/70 text-amber-950 dark:text-amber-100 hover:bg-amber-400 font-medium';
+        // Hari Berjalan: Hijau
+        return 'bg-emerald-500 text-white hover:bg-emerald-600 font-medium';
+      case 'ONBOARDING':
+        // Onboarding (OBD): Hijau Tua
+        return 'bg-emerald-700 text-white font-extrabold text-[10px] hover:bg-emerald-800 shadow-xs';
+      case 'PO_EXPIRED':
+        // PO Habis (PO): Biru
+        return 'bg-blue-600 text-white font-extrabold text-[10px] hover:bg-blue-700 shadow-xs';
       case 'EMPLOYEE_CONTRACT_EXPIRED':
+        // Kontrak Employee Habis (CO): Merah Tua / Coral
+        return 'bg-rose-600 text-white font-extrabold text-[10px] hover:bg-rose-700 shadow-xs';
+      case 'BENCH_IDLE':
       case 'BENCH':
-      case 'OFFBOARDED':
-        // Merah Muda: Kontrak Karyawan Habis (CO)
-        return 'bg-rose-500 text-white font-extrabold text-[10px] hover:bg-rose-600 shadow-xs';
+        // Idle (On Bench): Merah Muda (Pink)
+        return 'bg-rose-300 dark:bg-rose-900/80 text-rose-950 dark:text-rose-100 font-bold border border-rose-400/80 hover:bg-rose-400';
       default:
         return 'bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200';
     }
@@ -412,31 +415,31 @@ export default function TimelinePage() {
       <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
         <h4 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
           <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          Keterangan Warna Cell (Legend Matrix)
+          Keterangan Warna Cell & Indikator Matrix (Legend)
         </h4>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs font-semibold">
-          {/* 1. Greyout */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5 text-xs font-semibold">
+          {/* 1. Belum Join */}
           <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center gap-2">
-            <span className="h-4 w-7 rounded bg-slate-400 dark:bg-slate-600 shrink-0"></span>
+            <span className="h-4 w-7 rounded bg-slate-300 dark:bg-slate-700 shrink-0"></span>
             <span className="text-[11px] text-slate-700 dark:text-slate-300 font-bold">Belum Join</span>
           </div>
 
-          {/* 2. Hijau Muda */}
+          {/* 2. Hari Berjalan (Hijau) */}
           <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center gap-2">
-            <span className="h-4 w-7 rounded bg-emerald-200 dark:bg-emerald-900/80 border border-emerald-300 dark:border-emerald-700 shrink-0"></span>
-            <span className="text-[11px] text-slate-700 dark:text-slate-300 font-bold">Hari yang dilalui</span>
+            <span className="h-4 w-7 rounded bg-emerald-500 shrink-0"></span>
+            <span className="text-[11px] text-slate-700 dark:text-slate-300 font-bold">Hari Berjalan (Hijau)</span>
           </div>
 
-          {/* 3. Hijau Tua (OBD) */}
+          {/* 3. Onboarding (OBD) */}
           <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center gap-2">
-            <span className="h-4 w-7 rounded bg-emerald-600 text-white text-[9px] font-extrabold flex items-center justify-center shrink-0">
+            <span className="h-4 w-7 rounded bg-emerald-700 text-white text-[9px] font-extrabold flex items-center justify-center shrink-0">
               OBD
             </span>
             <span className="text-[11px] text-slate-700 dark:text-slate-300 font-bold">Onboarding (OBD)</span>
           </div>
 
-          {/* 4. Biru (PO) */}
+          {/* 4. PO Habis (PO) */}
           <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center gap-2">
             <span className="h-4 w-7 rounded bg-blue-600 text-white text-[9px] font-extrabold flex items-center justify-center shrink-0">
               PO
@@ -444,18 +447,24 @@ export default function TimelinePage() {
             <span className="text-[11px] text-slate-700 dark:text-slate-300 font-bold">PO Habis (PO)</span>
           </div>
 
-          {/* 5. Kuning */}
+          {/* 5. CO (Kontrak Employee Habis) */}
           <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center gap-2">
-            <span className="h-4 w-7 rounded bg-amber-300 dark:bg-amber-600 border border-amber-400 dark:border-amber-500 shrink-0"></span>
-            <span className="text-[11px] text-slate-700 dark:text-slate-300 font-bold">Hari belum dilalui</span>
-          </div>
-
-          {/* 6. Merah Muda (CO) */}
-          <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center gap-2">
-            <span className="h-4 w-7 rounded bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center shrink-0">
+            <span className="h-4 w-7 rounded bg-rose-600 text-white text-[9px] font-extrabold flex items-center justify-center shrink-0">
               CO
             </span>
-            <span className="text-[11px] text-slate-700 dark:text-slate-300 font-bold">Kontrak Karyawan Habis (CO)</span>
+            <span className="text-[11px] text-slate-700 dark:text-slate-300 font-bold">Kontrak Employee Habis (CO)</span>
+          </div>
+
+          {/* 6. Idle (Merah Muda) */}
+          <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center gap-2">
+            <span className="h-4 w-7 rounded bg-rose-300 dark:bg-rose-900 border border-rose-400 shrink-0"></span>
+            <span className="text-[11px] text-slate-700 dark:text-slate-300 font-bold">Idle (Merah Muda)</span>
+          </div>
+
+          {/* 7. Kontrak Habis (Greyout) */}
+          <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center gap-2">
+            <span className="h-4 w-7 rounded bg-slate-400 dark:bg-slate-600 shrink-0"></span>
+            <span className="text-[11px] text-slate-700 dark:text-slate-300 font-bold">Kontrak Habis (Greyout)</span>
           </div>
         </div>
       </div>

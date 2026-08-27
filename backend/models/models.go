@@ -57,6 +57,7 @@ type Employee struct {
 	RevenueNett         float64   `gorm:"type:numeric(15,2);default:0;column:revenue_nett" json:"revenue_nett"`
 	JoinDate            string    `gorm:"type:varchar(50);column:join_date" json:"join_date"`
 	OnboardingDate      string    `gorm:"type:varchar(50);column:onboarding_date" json:"onboarding_date"`
+	LastSalaryIncrementDate string `gorm:"type:varchar(50);column:last_salary_increment_date" json:"last_salary_increment_date"`
 	IsPermanent         bool      `gorm:"type:boolean;default:false;column:is_permanent" json:"is_permanent"`
 	AllocationStatus    string    `gorm:"type:varchar(30);default:'ACTIVE';column:allocation_status" json:"allocation_status"`
 }
@@ -90,6 +91,7 @@ type EmployeeRevenueAnalysis struct {
 	ContractPeriod      string  `json:"contract_period"`
 	StartContract       string  `json:"start_contract"`
 	EndContract         string  `json:"end_contract"`
+	LastSalaryIncrementDate string `json:"last_salary_increment_date"`
 	SallaryGross        float64 `json:"sallary_gross"`
 	TunjanganPenempatan float64 `json:"tunjangan_penempatan"`
 	TunjanganKeahlian   float64 `json:"tunjangan_keahlian"`
@@ -168,6 +170,7 @@ func CalculateRevenueDetails(emp Employee) EmployeeRevenueAnalysis {
 		ContractPeriod:      startClean + " s/d " + endClean,
 		StartContract:       startClean,
 		EndContract:         endClean,
+		LastSalaryIncrementDate: cleanDate(emp.LastSalaryIncrementDate),
 		SallaryGross:        emp.SallaryGross,
 		TunjanganPenempatan: emp.TunjanganPenempatan,
 		TunjanganKeahlian:   emp.TunjanganKeahlian,

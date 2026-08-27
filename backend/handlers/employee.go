@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -25,10 +26,16 @@ type PaginatedEmployeeResponse struct {
 func GetEmployees(c *gin.Context) {
 	query := database.DB.Session(&gorm.Session{}).Model(&models.Employee{}).Preload("Group").Preload("Customer")
 
-	// Status filter (Active / Resign / All)
+	// Status filter (Active / Resign / Expiring 3M / All)
 	statusFilter := strings.ToLower(c.Query("status"))
 	if statusFilter == "resign" {
 		query = query.Where("LOWER(status) IN ('resign', 'resigned', 'inactive') OR is_active = ?", false)
+	} else if statusFilter == "expiring" || statusFilter == "expiring_3m" {
+		now := time.Now()
+		threeMonthsLater := now.AddDate(0, 3, 0)
+		todayStr := now.Format("2006-01-02")
+		threeMonthsStr := threeMonthsLater.Format("2006-01-02")
+		query = query.Where("(LOWER(status) = 'active' OR status IS NULL OR status = '') AND (is_active = ? OR is_active IS NULL) AND LOWER(end_contract) != 'permanent' AND end_contract != '' AND end_contract >= ? AND end_contract <= ?", true, todayStr, threeMonthsStr)
 	} else if statusFilter == "active" || statusFilter == "" {
 		query = query.Where("(LOWER(status) = 'active' OR status IS NULL OR status = '') AND (is_active = ? OR is_active IS NULL)", true)
 	} // if "all", do not restrict status
@@ -81,7 +88,39 @@ func GetEmployees(c *gin.Context) {
 	offset := (page - 1) * limit
 
 	var employees []models.Employee
-	if err := query.Session(&gorm.Session{}).Order("id_employee DESC").Offset(offset).Limit(limit).Find(&employees).Error; err != nil {
+	orderClause := "id_employee DESC"
+	if statusFilter == "expiring" || statusFilter == "expiring_3m" {
+		orderClause = "end_contract ASC"
+	}
+
+	sortBy := c.Query("sort_by")
+	order := strings.ToUpper(c.Query("order"))
+	if order != "ASC" && order != "DESC" {
+		order = "ASC"
+	}
+
+	if sortBy != "" {
+		switch sortBy {
+		case "employee_name":
+			orderClause = "employee_name " + order
+		case "employee_role":
+			orderClause = "employee_role " + order
+		case "status":
+			orderClause = "status " + order
+		case "end_contract":
+			orderClause = "end_contract " + order
+		case "last_salary_increment_date":
+			orderClause = "last_salary_increment_date " + order
+		case "sallary_gross":
+			orderClause = "sallary_gross " + order
+		case "koefisien":
+			orderClause = "koefisien " + order
+		case "revenue_nett":
+			orderClause = "revenue_nett " + order
+		}
+	}
+
+	if err := query.Session(&gorm.Session{}).Order(orderClause).Offset(offset).Limit(limit).Find(&employees).Error; err != nil {
 		middleware.RespondError(c, http.StatusInternalServerError, "Internal Server Error", err.Error())
 		return
 	}
@@ -219,6 +258,7 @@ func UpdateEmployee(c *gin.Context) {
 	emp.SallaryGross = req.SallaryGross
 	emp.TunjanganPenempatan = req.TunjanganPenempatan
 	emp.TunjanganKeahlian = req.TunjanganKeahlian
+	emp.LastSalaryIncrementDate = req.LastSalaryIncrementDate
 	if req.Koefisien != 0 {
 		emp.Koefisien = req.Koefisien
 	}

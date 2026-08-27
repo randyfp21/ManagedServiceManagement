@@ -20,7 +20,10 @@ import {
   Check,
   Filter,
   RotateCcw,
-  Tag
+  Tag,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { formatIDR, formatDateID } from '../utils/formatters';
@@ -35,7 +38,9 @@ export default function EmployeePage() {
   const [search, setSearch] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedCustomer, setSelectedCustomer] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('active'); // 'active', 'resign', 'all'
+  const [selectedStatus, setSelectedStatus] = useState('active'); // 'active', 'resign', 'all', 'expiring_3m'
+  const [sortBy, setSortBy] = useState(''); // 'employee_name', 'status', 'end_contract', 'last_salary_increment_date', 'sallary_gross', 'koefisien', 'revenue_nett'
+  const [sortOrder, setSortOrder] = useState('asc'); // 'asc' | 'desc'
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -58,6 +63,7 @@ export default function EmployeePage() {
     id_customer: '',
     start_contract: '',
     end_contract: '',
+    last_salary_increment_date: '',
     sallary_gross: 0,
     tunjangan_penempatan: 0,
     tunjangan_keahlian: 0,
@@ -71,7 +77,7 @@ export default function EmployeePage() {
 
   useEffect(() => {
     fetchEmployees();
-  }, [page, search, selectedGroup, selectedCustomer, selectedStatus]);
+  }, [page, search, selectedGroup, selectedCustomer, selectedStatus, sortBy, sortOrder]);
 
   const fetchOptions = async () => {
     try {
@@ -93,6 +99,7 @@ export default function EmployeePage() {
       if (search) query += `&search=${encodeURIComponent(search)}`;
       if (selectedGroup !== 'all') query += `&id_group=${selectedGroup}`;
       if (selectedCustomer !== 'all') query += `&id_customer=${selectedCustomer}`;
+      if (sortBy) query += `&sort_by=${sortBy}&order=${sortOrder}`;
 
       const res = await apiFetch(query);
       if (res.success) {
@@ -107,11 +114,39 @@ export default function EmployeePage() {
     }
   };
 
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      if (sortOrder === 'asc') {
+        setSortOrder('desc');
+      } else {
+        setSortBy('');
+        setSortOrder('asc');
+      }
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+    setPage(1);
+  };
+
+  const renderSortIcon = (field) => {
+    if (sortBy !== field) {
+      return <ArrowUpDown className="h-3 w-3 text-slate-400 opacity-60 group-hover:opacity-100 transition-opacity" />;
+    }
+    return sortOrder === 'asc' ? (
+      <ArrowUp className="h-3 w-3 text-blue-600 dark:text-blue-400 font-bold" />
+    ) : (
+      <ArrowDown className="h-3 w-3 text-blue-600 dark:text-blue-400 font-bold" />
+    );
+  };
+
   const handleResetFilters = () => {
     setSearch('');
     setSelectedGroup('all');
     setSelectedCustomer('all');
     setSelectedStatus('active');
+    setSortBy('');
+    setSortOrder('asc');
     setPage(1);
   };
 
@@ -131,6 +166,7 @@ export default function EmployeePage() {
       id_customer: '',
       start_contract: new Date().toISOString().split('T')[0],
       end_contract: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      last_salary_increment_date: '',
       sallary_gross: 10000000,
       tunjangan_penempatan: 1000000,
       tunjangan_keahlian: 1000000,
@@ -158,6 +194,7 @@ export default function EmployeePage() {
       id_customer: emp.id_customer || '',
       start_contract: formatDateForInput(emp.start_contract),
       end_contract: formatDateForInput(emp.end_contract),
+      last_salary_increment_date: formatDateForInput(emp.last_salary_increment_date),
       sallary_gross: emp.sallary_gross,
       tunjangan_penempatan: emp.tunjangan_penempatan,
       tunjangan_keahlian: emp.tunjangan_keahlian,
@@ -186,6 +223,7 @@ export default function EmployeePage() {
         id_customer: emp.id_customer,
         start_contract: emp.start_contract,
         end_contract: emp.end_contract,
+        last_salary_increment_date: emp.last_salary_increment_date || '',
         sallary_gross: emp.sallary_gross,
         tunjangan_penempatan: emp.tunjangan_penempatan,
         tunjangan_keahlian: emp.tunjangan_keahlian,
@@ -223,6 +261,7 @@ export default function EmployeePage() {
         id_customer: formData.id_customer ? Number(formData.id_customer) : null,
         start_contract: isPerm ? 'Permanent' : formData.start_contract,
         end_contract: isPerm ? 'Permanent' : formData.end_contract,
+        last_salary_increment_date: formData.last_salary_increment_date || '',
         is_permanent: isPerm,
         sallary_gross: Number(formData.sallary_gross),
         tunjangan_penempatan: Number(formData.tunjangan_penempatan),
@@ -312,7 +351,7 @@ export default function EmployeePage() {
       <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
           {/* Status Filter Buttons */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 self-start">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 self-start flex-wrap sm:flex-nowrap">
             <button
               onClick={() => {
                 setSelectedStatus('active');
@@ -326,6 +365,21 @@ export default function EmployeePage() {
             >
               <UserCheck className="h-3.5 w-3.5" />
               <span>Aktif</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setSelectedStatus('expiring_3m');
+                setPage(1);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                selectedStatus === 'expiring_3m'
+                  ? 'bg-amber-500 text-white shadow-md'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <AlertCircle className="h-3.5 w-3.5 text-amber-300" />
+              <span>Kontrak Habis ≤ 3 Bulan (Terdekat)</span>
             </button>
 
             <button
@@ -446,7 +500,7 @@ export default function EmployeePage() {
 
             {selectedStatus !== 'active' && (
               <span className="px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[11px] font-semibold flex items-center gap-1">
-                Status: {selectedStatus === 'resign' ? 'Resign' : 'Semua'}
+                Status: {selectedStatus === 'resign' ? 'Resign' : selectedStatus === 'expiring_3m' ? 'Kontrak Habis ≤ 3 Bulan (Terdekat)' : 'Semua'}
                 <X onClick={() => setSelectedStatus('active')} className="h-3 w-3 cursor-pointer hover:text-blue-900" />
               </span>
             )}
@@ -479,29 +533,86 @@ export default function EmployeePage() {
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold border-b border-slate-200 dark:border-slate-800">
+            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 uppercase text-[10px] font-bold border-b border-slate-200 dark:border-slate-800 select-none">
               <tr>
-                <th className="px-5 py-3.5">Nama & Role</th>
-                <th className="px-4 py-3.5 text-center">Status</th>
+                <th
+                  onClick={() => handleSort('employee_name')}
+                  className="px-5 py-3.5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Nama & Role</span>
+                    {renderSortIcon('employee_name')}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('status')}
+                  className="px-4 py-3.5 text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
+                >
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span>Status</span>
+                    {renderSortIcon('status')}
+                  </div>
+                </th>
                 <th className="px-4 py-3.5">Group</th>
                 <th className="px-4 py-3.5">Customer Assignment</th>
-                <th className="px-4 py-3.5">Periode Kontrak</th>
-                <th className="px-4 py-3.5">Gaji Gross</th>
-                <th className="px-2 py-3.5 text-center">Koef</th>
-                <th className="px-4 py-3.5">Nett Revenue</th>
+                <th
+                  onClick={() => handleSort('end_contract')}
+                  className="px-4 py-3.5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Periode Kontrak</span>
+                    {renderSortIcon('end_contract')}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('last_salary_increment_date')}
+                  className="px-4 py-3.5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Last Salary Increment</span>
+                    {renderSortIcon('last_salary_increment_date')}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('sallary_gross')}
+                  className="px-4 py-3.5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Gaji Gross</span>
+                    {renderSortIcon('sallary_gross')}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('koefisien')}
+                  className="px-2 py-3.5 text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
+                >
+                  <div className="flex items-center justify-center gap-1">
+                    <span>Koef</span>
+                    {renderSortIcon('koefisien')}
+                  </div>
+                </th>
+                <th
+                  onClick={() => handleSort('revenue_nett')}
+                  className="px-4 py-3.5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Nett Revenue</span>
+                    {renderSortIcon('revenue_nett')}
+                  </div>
+                </th>
                 <th className="px-5 py-3.5 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
               {loading ? (
                 <tr>
-                  <td colSpan="9" className="px-5 py-12 text-center text-slate-400">
+                  <td colSpan="10" className="px-5 py-12 text-center text-slate-400">
                     Memuat data karyawan...
                   </td>
                 </tr>
               ) : employees.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="px-5 py-12 text-center text-slate-400 space-y-1">
+                  <td colSpan="10" className="px-5 py-12 text-center text-slate-400 space-y-1">
                     <p className="font-bold text-slate-700 dark:text-slate-300">
                       {selectedStatus === 'resign'
                         ? 'Tidak ada karyawan yang berstatus Resign'
@@ -567,6 +678,10 @@ export default function EmployeePage() {
                         ) : (
                           `${formatDateID(emp.start_contract)} - ${formatDateID(emp.end_contract)}`
                         )}
+                      </td>
+
+                      <td className="px-4 py-3.5 text-[11px] font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                        {emp.last_salary_increment_date ? formatDateID(emp.last_salary_increment_date) : '-'}
                       </td>
 
                       <td className="px-4 py-3.5 font-medium whitespace-nowrap">
@@ -833,6 +948,18 @@ export default function EmployeePage() {
                     )}
                   </div>
                 </div>
+              </div>
+
+              <div>
+                <label className="block font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                  Tgl Kenaikan Gaji Terakhir (Last Salary Increment)
+                </label>
+                <input
+                  type="date"
+                  value={formData.last_salary_increment_date || ''}
+                  onChange={(e) => setFormData({ ...formData, last_salary_increment_date: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

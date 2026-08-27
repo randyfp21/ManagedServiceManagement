@@ -29,9 +29,16 @@ type SummaryMatrixResponse struct {
 	GrandTotal   int                  `json:"grand_total"`
 }
 
-// SyncAssignmentHistory scans current employees and generates/updates historical snapshot records
+// SyncAssignmentHistory scans current employees and generates/updates historical snapshot records starting from August 2026
 func SyncAssignmentHistory(year int) {
-	months := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
+	// Delete any old history prior to August 2026
+	database.DB.Where("year < 2026 OR (year = 2026 AND month < 8)").Delete(&models.AssignmentHistory{})
+
+	if year < 2026 {
+		return
+	}
+
+	allMonths := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
 
 	var employees []models.Employee
 	database.DB.Preload("Group").Preload("Customer").Find(&employees)
@@ -57,7 +64,13 @@ func SyncAssignmentHistory(year int) {
 		empStartStr := cleanDateString(emp.StartContract)
 		empEndStr := cleanDateString(emp.EndContract)
 
-		for mIdx, mName := range months {
+		startIdx := 0
+		if year == 2026 {
+			startIdx = 7 // August (0-indexed 7 = Month 8)
+		}
+
+		for mIdx := startIdx; mIdx < 12; mIdx++ {
+			mName := allMonths[mIdx]
 			monthNum := mIdx + 1
 
 			mStartStr := fmt.Sprintf("%04d-%02d-01", year, monthNum)

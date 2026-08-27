@@ -85,7 +85,6 @@ func GetBenchTimeline(c *gin.Context) {
 	query.Order("id_customer DESC, id_employee ASC").Find(&employees)
 
 	var timelineData []WeeklyTimelineEmployee
-	today := time.Now()
 
 	for _, emp := range employees {
 		groupName := "General"
@@ -212,34 +211,42 @@ func GetBenchTimeline(c *gin.Context) {
 					cell.Status = "NOT_YET_JOINED"
 					cell.Label = ""
 					cell.TooltipStatus = "Belum Join"
-				} else if weekDate.After(endContractTime) {
-					// 6. Kontrak Karyawan Habis (CO - Merah Muda)
-					cell.Status = "EMPLOYEE_CONTRACT_EXPIRED"
-					cell.Label = "CO"
-					cell.TooltipStatus = "Kontrak Karyawan Habis (CO)"
+				} else if !isPermanent && weekDate.After(endContractTime) {
+					// Check if this is the exact week of contract expiration
+					if weekDate.Before(endContractTime.AddDate(0, 0, 7)) {
+						// CO: Kontrak Karyawan Habis di minggu ini
+						cell.Status = "EMPLOYEE_CONTRACT_EXPIRED"
+						cell.Label = "CO"
+						cell.TooltipStatus = "Kontrak Employee Habis (CO)"
+					} else {
+						// Minggu berikutnya setelah kontrak habis -> Greyout
+						cell.Status = "CONTRACT_EXPIRED_AFTER"
+						cell.Label = ""
+						cell.TooltipStatus = "Kontrak Employee Telah Berakhir (Habis)"
+					}
 					hasExpiring = true
 				} else if emp.Customer != nil && errCustEnd == nil && weekDate.After(custEndTime) {
-					// 4. PO Habis (PO - Biru)
+					// PO: Kontrak Company Habis
 					cell.Status = "PO_EXPIRED"
 					cell.Label = "PO"
-					cell.TooltipStatus = "PO Habis (PO)"
+					cell.TooltipStatus = fmt.Sprintf("PO Habis (PO) - %s", custName)
 					hasExpiring = true
 				} else if weekDate.Before(startContractTime.AddDate(0, 0, 14)) {
-					// 3. Onboarding (OBD - Hijau Tua)
+					// OBD: Onboarding (Hijau Tua) with company detail
 					cell.Status = "ONBOARDING"
 					cell.Label = "OBD"
-					cell.TooltipStatus = "Onboarding (OBD)"
+					cell.TooltipStatus = fmt.Sprintf("Onboarding (OBD) di %s", custName)
 					hasOnboarding = true
-				} else if weekDate.Before(today) || weekDate.Equal(today) {
-					// 2. Hari yang dilalui (Hijau Muda)
+				} else if emp.IDCustomer == nil || *emp.IDCustomer == 0 || strings.Contains(strings.ToLower(custName), "bench") {
+					// Idle / On Bench -> Merah Muda (Pink)
+					cell.Status = "BENCH_IDLE"
+					cell.Label = ""
+					cell.TooltipStatus = "On Bench (Idle Resources)"
+				} else {
+					// Hari Berjalan -> Hijau
 					cell.Status = "PAST_DAYS"
 					cell.Label = ""
-					cell.TooltipStatus = "Hari yang dilalui"
-				} else {
-					// 5. Hari belum dilalui (Kuning)
-					cell.Status = "FUTURE_DAYS"
-					cell.Label = ""
-					cell.TooltipStatus = "Hari belum dilalui"
+					cell.TooltipStatus = fmt.Sprintf("Hari Berjalan (Aktif Penempatan di %s)", custName)
 				}
 
 				weeklyCells = append(weeklyCells, cell)

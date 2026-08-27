@@ -18,15 +18,18 @@ import {
 } from 'lucide-react';
 import { logout, getUser } from '../utils/api';
 
-const navItems = [
+const navItemsTop = [
   { path: '/', label: 'Dashboard Overview', icon: LayoutDashboard },
-  { path: '/employees', label: 'Employee Master Data', icon: Users },
-  { path: '/groups', label: 'Group Master Data', icon: FolderGit2 },
-  { path: '/customers', label: 'Customer Master Data', icon: Building2 },
-  { path: '/summary', label: 'Monthly Summary', icon: CalendarDays },
   { path: '/revenue', label: 'Revenue & Profitability', icon: TrendingUp },
-  { path: '/personal-notes', label: 'Personal Notes (Salary)', icon: FileSpreadsheet },
-  { path: '/timeline', label: 'On Bench & Timeline', icon: Clock },
+  { path: '/summary', label: 'Monthly Summary', icon: CalendarDays },
+  { path: '/timeline', label: 'On Bench', icon: Clock },
+];
+
+const navItemsBottom = [
+  { path: '/employees', label: 'Master Data Employee', icon: Users },
+  { path: '/groups', label: 'Master Data Group', icon: FolderGit2 },
+  { path: '/customers', label: 'Master Data Customer', icon: Building2 },
+  { path: '/personal-notes', label: 'Personal Notes', icon: FileSpreadsheet },
   { path: '/audit-logs', label: 'Audit Changes Logs', icon: History },
 ];
 
@@ -37,6 +40,31 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const renderNavLink = (item) => {
+    const Icon = item.icon;
+    return (
+      <NavLink
+        key={item.path}
+        to={item.path}
+        onClick={onClose}
+        end={item.path === '/'}
+        className={({ isActive }) =>
+          `flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 group ${
+            isActive
+              ? 'bg-blue-50 dark:bg-blue-600/15 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 shadow-xs font-bold'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+          }`
+        }
+      >
+        <div className="flex items-center gap-3">
+          <Icon className="h-4.5 w-4.5 transition-transform duration-200 group-hover:scale-110" />
+          <span>{item.label}</span>
+        </div>
+        <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400" />
+      </NavLink>
+    );
   };
 
   return (
@@ -98,30 +126,14 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
             Main Management
           </div>
 
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={onClose}
-                end={item.path === '/'}
-                className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 group ${
-                    isActive
-                      ? 'bg-blue-50 dark:bg-blue-600/15 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 shadow-xs font-bold'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-                  }`
-                }
-              >
-                <div className="flex items-center gap-3">
-                  <Icon className="h-4.5 w-4.5 transition-transform duration-200 group-hover:scale-110" />
-                  <span>{item.label}</span>
-                </div>
-                <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400" />
-              </NavLink>
-            );
-          })}
+          {navItemsTop.map(renderNavLink)}
+
+          {/* Divider */}
+          <div className="py-2">
+            <hr className="border-t border-slate-200 dark:border-slate-800" />
+          </div>
+
+          {navItemsBottom.map(renderNavLink)}
         </div>
 
         {/* Footer User Profile & Logout */}

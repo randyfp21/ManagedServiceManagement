@@ -20,7 +20,12 @@ import {
   AlertCircle,
   Calculator,
   FolderGit2,
-  Calendar
+  Calendar,
+  Sparkles,
+  ArrowUpRight,
+  ShieldCheck,
+  Layers,
+  ChevronRight
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { formatIDR, getMarginBadge, formatDateID } from '../utils/formatters';
@@ -89,7 +94,6 @@ export default function RevenuePage() {
       const res = await apiFetch(`/revenue/analysis${query}`);
       if (res.success) {
         setAnalysis(res.data);
-        // Expand all customer groups by default
         const initialExpanded = {};
         res.data.items?.forEach((item) => {
           initialExpanded[item.customer_name] = true;
@@ -117,10 +121,8 @@ export default function RevenuePage() {
     return dateStr.substring(0, 10);
   };
 
-  // Open Edit Modal with selected Employee data
   const handleOpenEditModal = (item) => {
     setEditingItem(item);
-    // Find customer ID if assigned
     const matchedCust = customersList.find((c) => c.customer_name === item.customer_name);
     const matchedGroup = groupsList.find((g) => g.group_name === item.group_name);
 
@@ -148,7 +150,6 @@ export default function RevenuePage() {
     setErrorMsg('');
   };
 
-  // Handle Submit Form -> PUT /api/employees/:id
   const handleSubmitForm = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -201,7 +202,6 @@ export default function RevenuePage() {
     }
   };
 
-  // Live calculation metrics for modal preview
   const livePreview = useMemo(() => {
     const gross = Number(formData.sallary_gross) || 0;
     const penempatan = Number(formData.tunjangan_penempatan) || 0;
@@ -228,11 +228,9 @@ export default function RevenuePage() {
     };
   }, [formData]);
 
-  // Filter items by active status and search query
   const filteredItems = useMemo(() => {
     if (!analysis?.items) return [];
 
-    // Filter out employees who are Resign or inactive
     const activeOnly = analysis.items.filter(
       (item) => item.status !== 'Resign' && item.is_active !== false
     );
@@ -249,7 +247,6 @@ export default function RevenuePage() {
     );
   }, [analysis, searchQuery]);
 
-  // Group items by customer name for Grouped View
   const groupedByCustomer = useMemo(() => {
     const groups = {};
 
@@ -279,13 +276,11 @@ export default function RevenuePage() {
       groups[custName].totalRevenue += item.revenue_nett;
     });
 
-    // Calculate margins for each group
     Object.values(groups).forEach((g) => {
       g.marginNominal = g.totalRevenue - g.totalCOGS;
       g.marginPercent = g.totalRevenue > 0 ? (g.marginNominal / g.totalRevenue) * 100 : 0;
     });
 
-    // Sort: Standard Customers first (alphabetical), On Bench last
     return Object.values(groups).sort((a, b) => {
       if (a.isBench) return 1;
       if (b.isBench) return -1;
@@ -293,7 +288,6 @@ export default function RevenuePage() {
     });
   }, [filteredItems]);
 
-  // Filtered Summary KPIs
   const filteredSummary = useMemo(() => {
     let rev = 0;
     let direct = 0;
@@ -337,10 +331,10 @@ export default function RevenuePage() {
   }, [filteredItems]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-300">
       {/* Toast Notification */}
       {successMsg && (
-        <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-xs font-bold flex items-center justify-between shadow-md">
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-xs font-bold flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-2">
             <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             <span>{successMsg}</span>
@@ -351,59 +345,69 @@ export default function RevenuePage() {
         </div>
       )}
 
-      {/* Header & Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            Revenue & Profitability per Customer
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Kalkulasi profitabilitas per nasabah bank, alokasi karyawan, dan edit finansial langsung yang terhubung ke seluruh tabel
-          </p>
-        </div>
+      {/* Modern Hero Header Banner */}
+      <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white shadow-2xl border border-slate-800">
+        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-1/3 -top-10 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
 
-        {/* View Switcher Toggle */}
-        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700/60 self-start md:self-auto">
-          <button
-            onClick={() => setViewMode('grouped')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              viewMode === 'grouped'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <LayoutGrid className="h-3.5 w-3.5" />
-            <span>Per Customer Cards</span>
-          </button>
-          <button
-            onClick={() => setViewMode('table')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              viewMode === 'table'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <TableIcon className="h-3.5 w-3.5" />
-            <span>Tabel Matrix</span>
-          </button>
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-bold backdrop-blur-md">
+              <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+              <span>Financial Profitability Intelligence</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white flex items-center gap-3">
+              Revenue & Profitability per Customer
+            </h1>
+            <p className="text-slate-300 text-xs sm:text-sm max-w-2xl leading-relaxed">
+              Kalkulasi margin profitabilitas, alokasi biaya langsung (COGS), dan manajemen finansial karyawan per nasabah perbankan.
+            </p>
+          </div>
+
+          {/* View Mode Switcher Toggle */}
+          <div className="flex items-center gap-2 bg-white/10 dark:bg-slate-900/60 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 self-start lg:self-auto">
+            <button
+              onClick={() => setViewMode('grouped')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                viewMode === 'grouped'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>Per Customer Cards</span>
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                viewMode === 'table'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              <TableIcon className="h-3.5 w-3.5" />
+              <span>Tabel Matrix</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Filter Control Bar */}
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Customer Filter Dropdown */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
+          <div className="h-9 w-9 rounded-xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+            <Filter className="h-4 w-4" />
+          </div>
           <span className="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
             Filter Customer:
           </span>
           <select
             value={selectedCustomer}
             onChange={(e) => setSelectedCustomer(e.target.value)}
-            className="w-full sm:w-64 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full sm:w-72 px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs"
           >
-            <option value="all">Semua Customer & Idle (All)</option>
+            <option value="all">🌐 Semua Customer & Idle (All)</option>
             <option value="bench">⚠️ On Bench (Idle Resources Only)</option>
             <optgroup label="Bank Customers">
               {customersList.map((cust) => (
@@ -416,61 +420,73 @@ export default function RevenuePage() {
         </div>
 
         {/* Search Input */}
-        <div className="relative w-full sm:w-72">
+        <div className="relative w-full sm:w-80">
           <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari karyawan, role, atau bank..."
-            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Cari nama karyawan, role, atau bank..."
+            className="w-full pl-10 pr-9 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Summary KPI Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Revenue Nett</span>
-          <p className="text-lg font-extrabold text-blue-600 dark:text-blue-400 mt-1">
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Revenue Nett</span>
+          <p className="text-xl font-extrabold text-blue-600 dark:text-blue-400 mt-2 truncate tracking-tight">
             {formatIDR(filteredSummary.totalRevenue)}
           </p>
+          <span className="text-[11px] font-semibold text-slate-400 mt-1 block">Dari {filteredSummary.totalEmployees} Resource</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Direct Cost</span>
-          <p className="text-lg font-extrabold text-slate-800 dark:text-slate-200 mt-1">
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Direct Cost</span>
+          <p className="text-xl font-extrabold text-slate-900 dark:text-white mt-2 truncate tracking-tight">
             {formatIDR(filteredSummary.totalDirectCost)}
           </p>
+          <span className="text-[11px] font-semibold text-slate-400 mt-1 block">Gross + Tunjangan</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total COGS</span>
-          <p className="text-lg font-extrabold text-slate-800 dark:text-slate-200 mt-1">
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total COGS</span>
+          <p className="text-xl font-extrabold text-slate-900 dark:text-white mt-2 truncate tracking-tight">
             {formatIDR(filteredSummary.totalCOGS)}
           </p>
+          <span className="text-[11px] font-semibold text-slate-400 mt-1 block">Gross x Koefisien</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Net Profit Margin</span>
-          <div className="flex items-baseline justify-between mt-1">
-            <span className={`text-lg font-extrabold ${filteredSummary.marginNominal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Net Profit Margin</span>
+          <div className="flex items-baseline justify-between mt-2 gap-1">
+            <span className={`text-xl font-extrabold truncate tracking-tight ${filteredSummary.marginNominal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               {formatIDR(filteredSummary.marginNominal)}
             </span>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
-              {filteredSummary.marginPct.toFixed(1)}%
-            </span>
           </div>
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md mt-1">
+            <ArrowUpRight className="h-3 w-3" />
+            {filteredSummary.marginPct.toFixed(1)}% Profitability
+          </span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Resource Status</span>
+        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Resource Distribution</span>
           <div className="flex items-center justify-between mt-2 text-xs font-bold">
-            <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
+            <span className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800">
               <UserCheck className="h-3.5 w-3.5" />
-              {filteredSummary.countActive} Assigned
+              {filteredSummary.countActive} Active
             </span>
-            <span className="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-1 rounded-lg border border-amber-200 dark:border-amber-800">
+            <span className="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-1 rounded-xl border border-amber-200 dark:border-amber-800">
               <UserX className="h-3.5 w-3.5" />
               {filteredSummary.countBench} Idle
             </span>
@@ -479,14 +495,14 @@ export default function RevenuePage() {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
-          <p className="text-xs text-slate-400 font-medium">Mengkalkulasi profitabilitas per customer bank...</p>
+        <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-3 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
+          <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent"></div>
+          <p className="text-xs text-slate-400 font-bold">Mengkalkulasi profitabilitas per customer bank...</p>
         </div>
       ) : groupedByCustomer.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center text-slate-400 space-y-2">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-12 text-center text-slate-400 space-y-2 shadow-sm">
           <ShieldAlert className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto" />
-          <p className="font-bold text-slate-700 dark:text-slate-300">Tidak ada data ditemukan</p>
+          <p className="font-bold text-slate-700 dark:text-slate-300">Tidak ada data finansial ditemukan</p>
           <p className="text-xs">Coba ganti filter customer atau ubah kata kunci pencarian.</p>
         </div>
       ) : viewMode === 'grouped' ? (
@@ -498,7 +514,7 @@ export default function RevenuePage() {
             return (
               <div
                 key={group.customerName}
-                className={`rounded-2xl border transition-all overflow-hidden ${
+                className={`rounded-3xl border transition-all overflow-hidden ${
                   group.isBench
                     ? 'bg-amber-50/30 dark:bg-amber-950/10 border-amber-300/80 dark:border-amber-800/60 shadow-md'
                     : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm'
@@ -509,16 +525,16 @@ export default function RevenuePage() {
                   onClick={() => toggleExpand(group.customerName)}
                   className={`p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer select-none transition-colors ${
                     group.isBench
-                      ? 'bg-amber-100/50 dark:bg-amber-950/40 hover:bg-amber-100/80 dark:hover:bg-amber-950/60 border-b border-amber-200 dark:border-amber-800/50'
+                      ? 'bg-amber-100/60 dark:bg-amber-950/40 hover:bg-amber-100/80 dark:hover:bg-amber-950/60 border-b border-amber-200 dark:border-amber-800/50'
                       : 'bg-slate-50/70 dark:bg-slate-800/50 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3.5">
                     <div
-                      className={`h-11 w-11 rounded-xl flex items-center justify-center ${
+                      className={`h-11 w-11 rounded-2xl flex items-center justify-center shrink-0 ${
                         group.isBench
-                          ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
-                          : 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                          ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20'
+                          : 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                       }`}
                     >
                       {group.isBench ? <UserX className="h-6 w-6" /> : <Building2 className="h-6 w-6" />}
@@ -530,25 +546,25 @@ export default function RevenuePage() {
                           {group.customerName}
                         </h3>
                         {group.isBench ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-200 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700">
                             ⚠️ Idle Resources (On Bench)
                           </span>
                         ) : (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                             Enterprise Client
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
                         {group.items.length} Karyawan Terdaftar
                       </p>
                     </div>
                   </div>
 
                   {/* Summary Metrics for this Customer */}
-                  <div className="flex items-center gap-4 flex-wrap md:flex-nowrap">
+                  <div className="flex items-center gap-5 flex-wrap md:flex-nowrap">
                     <div className="text-left md:text-right">
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                         Revenue Nett
                       </span>
                       <span className="text-xs sm:text-sm font-extrabold text-blue-600 dark:text-blue-400">
@@ -557,7 +573,7 @@ export default function RevenuePage() {
                     </div>
 
                     <div className="text-left md:text-right">
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                         Total COGS
                       </span>
                       <span className="text-xs sm:text-sm font-extrabold text-slate-700 dark:text-slate-300">
@@ -566,7 +582,7 @@ export default function RevenuePage() {
                     </div>
 
                     <div className="text-left md:text-right">
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                         Net Margin
                       </span>
                       <div className="flex items-center gap-1.5">
@@ -579,13 +595,13 @@ export default function RevenuePage() {
                         >
                           {formatIDR(group.marginNominal)}
                         </span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
                           {group.marginPercent.toFixed(1)}%
                         </span>
                       </div>
                     </div>
 
-                    <button className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                    <button className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
                       {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                     </button>
                   </div>
@@ -597,21 +613,21 @@ export default function RevenuePage() {
                     <table className="w-full text-left text-xs">
                       <thead className="bg-slate-100/70 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 uppercase font-bold border-b border-slate-200 dark:border-slate-800 text-[10px]">
                         <tr>
-                          <th className="px-4 py-2.5">Nama Karyawan</th>
-                          <th className="px-3 py-2.5">Role</th>
-                          <th className="px-3 py-2.5">Group</th>
-                          <th className="px-3 py-2.5">Periode Kontrak</th>
-                          <th className="px-3 py-2.5">Gaji Gross</th>
-                          <th className="px-3 py-2.5">Tunj. Penempatan</th>
-                          <th className="px-3 py-2.5">Tunj. Keahlian</th>
-                          <th className="px-3 py-2.5 font-extrabold text-slate-800 dark:text-slate-200">Direct Cost</th>
-                          <th className="px-2 py-2.5 text-center">Koef</th>
-                          <th className="px-3 py-2.5 font-extrabold text-slate-800 dark:text-slate-200">COGS</th>
-                          <th className="px-3 py-2.5 font-extrabold text-blue-600 dark:text-blue-400">Revenue Nett</th>
-                          <th className="px-3 py-2.5 font-extrabold text-emerald-600 dark:text-emerald-400">Margin (Rp)</th>
-                          <th className="px-3 py-2.5 font-extrabold text-center text-emerald-600 dark:text-emerald-400">Margin (%)</th>
-                          <th className="px-3 py-2.5 text-center">Status</th>
-                          <th className="px-4 py-2.5 text-center">Aksi</th>
+                          <th className="px-4 py-3">Nama Karyawan</th>
+                          <th className="px-3 py-3">Role</th>
+                          <th className="px-3 py-3">Group</th>
+                          <th className="px-3 py-3">Periode Kontrak</th>
+                          <th className="px-3 py-3">Gaji Gross</th>
+                          <th className="px-3 py-3">Tunj. Penempatan</th>
+                          <th className="px-3 py-3">Tunj. Keahlian</th>
+                          <th className="px-3 py-3 font-extrabold text-slate-800 dark:text-slate-200">Direct Cost</th>
+                          <th className="px-2 py-3 text-center">Koef</th>
+                          <th className="px-3 py-3 font-extrabold text-slate-800 dark:text-slate-200">COGS</th>
+                          <th className="px-3 py-3 font-extrabold text-blue-600 dark:text-blue-400">Revenue Nett</th>
+                          <th className="px-3 py-3 font-extrabold text-emerald-600 dark:text-emerald-400">Margin (Rp)</th>
+                          <th className="px-3 py-3 font-extrabold text-center text-emerald-600 dark:text-emerald-400">Margin (%)</th>
+                          <th className="px-3 py-3 text-center">Status</th>
+                          <th className="px-4 py-3 text-center">Aksi</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
@@ -622,16 +638,16 @@ export default function RevenuePage() {
                               key={emp.id_employee}
                               className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                             >
-                              <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">
+                              <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-white">
                                 {emp.employee_name}
                               </td>
-                              <td className="px-3 py-3 text-slate-600 dark:text-slate-300">
+                              <td className="px-3 py-3.5 text-slate-600 dark:text-slate-300">
                                 {emp.employee_role}
                               </td>
-                              <td className="px-3 py-3 text-slate-500">
+                              <td className="px-3 py-3.5 text-slate-500 font-semibold">
                                 {emp.group_name}
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap text-[11px] text-slate-500">
+                              <td className="px-3 py-3.5 whitespace-nowrap text-[11px] text-slate-500">
                                 {emp.start_contract?.toLowerCase() === 'permanent' || emp.end_contract?.toLowerCase() === 'permanent' ? (
                                   <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-extrabold border border-blue-200 dark:border-blue-800 text-[10px]">
                                     🛡️ Permanent
@@ -640,31 +656,31 @@ export default function RevenuePage() {
                                   `${formatDateID(emp.start_contract)} - ${formatDateID(emp.end_contract)}`
                                 )}
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap font-medium">
+                              <td className="px-3 py-3.5 whitespace-nowrap font-medium">
                                 {formatIDR(emp.sallary_gross, false)}
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap text-slate-500">
+                              <td className="px-3 py-3.5 whitespace-nowrap text-slate-500">
                                 {formatIDR(emp.tunjangan_penempatan, false)}
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap text-slate-500">
+                              <td className="px-3 py-3.5 whitespace-nowrap text-slate-500">
                                 {formatIDR(emp.tunjangan_keahlian, false)}
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap font-bold text-slate-900 dark:text-slate-100 bg-slate-50/80 dark:bg-slate-800/30">
+                              <td className="px-3 py-3.5 whitespace-nowrap font-bold text-slate-900 dark:text-slate-100 bg-slate-50/80 dark:bg-slate-800/30">
                                 {formatIDR(emp.total_direct_cost, false)}
                               </td>
-                              <td className="px-2 py-3 text-center font-bold">
+                              <td className="px-2 py-3.5 text-center font-bold">
                                 <span className="px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 text-[10px]">
                                   {emp.koefisien}
                                 </span>
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap font-bold text-slate-900 dark:text-slate-100 bg-slate-50/80 dark:bg-slate-800/30">
+                              <td className="px-3 py-3.5 whitespace-nowrap font-bold text-slate-900 dark:text-slate-100 bg-slate-50/80 dark:bg-slate-800/30">
                                 {formatIDR(emp.cogs, false)}
                               </td>
-                              <td className="px-3 py-3 whitespace-nowrap font-bold text-blue-600 dark:text-blue-400 bg-blue-50/20 dark:bg-blue-950/20">
+                              <td className="px-3 py-3.5 whitespace-nowrap font-bold text-blue-600 dark:text-blue-400 bg-blue-50/20 dark:bg-blue-950/20">
                                 {formatIDR(emp.revenue_nett, false)}
                               </td>
                               <td
-                                className={`px-3 py-3 whitespace-nowrap font-bold ${
+                                className={`px-3 py-3.5 whitespace-nowrap font-bold ${
                                   emp.margin_nominal >= 0
                                     ? 'text-emerald-600 dark:text-emerald-400'
                                     : 'text-rose-600 dark:text-rose-400'
@@ -672,10 +688,10 @@ export default function RevenuePage() {
                               >
                                 {formatIDR(emp.margin_nominal, false)}
                               </td>
-                              <td className="px-3 py-3 text-center font-extrabold text-slate-900 dark:text-slate-100">
+                              <td className="px-3 py-3.5 text-center font-extrabold text-slate-900 dark:text-slate-100">
                                 {emp.margin_percent.toFixed(1)}%
                               </td>
-                              <td className="px-3 py-3 text-center">
+                              <td className="px-3 py-3.5 text-center">
                                 <span
                                   className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge.bg}`}
                                 >
@@ -683,10 +699,10 @@ export default function RevenuePage() {
                                   {badge.text}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-center whitespace-nowrap">
+                              <td className="px-4 py-3.5 text-center whitespace-nowrap">
                                 <button
                                   onClick={() => handleOpenEditModal(emp)}
-                                  className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors font-bold text-[11px] flex items-center gap-1 mx-auto"
+                                  className="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 transition-all font-bold text-[11px] flex items-center gap-1.5 mx-auto border border-blue-200 dark:border-blue-800"
                                   title="Edit Data Finansial & Alokasi"
                                 >
                                   <Edit2 className="h-3 w-3" />
@@ -730,7 +746,7 @@ export default function RevenuePage() {
         </div>
       ) : (
         /* View Mode 2: Full Matrix Table */
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 uppercase font-bold border-b border-slate-200 dark:border-slate-800 text-[10px]">
@@ -767,7 +783,7 @@ export default function RevenuePage() {
                       <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-white">
                         {item.employee_name}
                       </td>
-                      <td className="px-3 py-3.5 text-slate-500 dark:text-slate-400">
+                      <td className="px-3 py-3.5 text-slate-500 font-semibold">
                         {item.group_name}
                       </td>
                       <td className="px-3 py-3.5 text-slate-600 dark:text-slate-300">
@@ -775,7 +791,7 @@ export default function RevenuePage() {
                       </td>
                       <td className="px-3 py-3.5 font-medium">
                         {isBench ? (
-                          <span className="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-bold text-[10px]">
+                          <span className="px-2.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-bold text-[10px]">
                             ⚠️ On Bench (Idle)
                           </span>
                         ) : (
@@ -831,7 +847,7 @@ export default function RevenuePage() {
                       <td className="px-4 py-3.5 text-center whitespace-nowrap">
                         <button
                           onClick={() => handleOpenEditModal(item)}
-                          className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors font-bold text-[11px] flex items-center gap-1 mx-auto"
+                          className="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 transition-all font-bold text-[11px] flex items-center gap-1.5 mx-auto border border-blue-200 dark:border-blue-800"
                           title="Edit Data Finansial & Alokasi"
                         >
                           <Edit2 className="h-3 w-3" />
@@ -874,9 +890,9 @@ export default function RevenuePage() {
       {/* Edit Direct Data Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5 overflow-y-auto max-h-[90vh]">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl space-y-5 overflow-y-auto max-h-[90vh]">
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
                 <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                   <Edit2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -888,7 +904,7 @@ export default function RevenuePage() {
               </div>
               <button
                 onClick={handleCloseModal}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -896,14 +912,14 @@ export default function RevenuePage() {
 
             {/* Error Message */}
             {errorMsg && (
-              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-xs font-semibold flex items-center gap-2">
+              <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-xs font-semibold flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-rose-500 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
             {/* Live Calculation Preview Box */}
-            <div className="p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 space-y-3">
+            <div className="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-extrabold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
                   <Calculator className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -963,7 +979,7 @@ export default function RevenuePage() {
                     required
                     value={formData.employee_name}
                     onChange={(e) => setFormData({ ...formData, employee_name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                   />
                 </div>
 
@@ -976,7 +992,7 @@ export default function RevenuePage() {
                     required
                     value={formData.employee_role}
                     onChange={(e) => setFormData({ ...formData, employee_role: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                   />
                 </div>
               </div>
@@ -989,7 +1005,7 @@ export default function RevenuePage() {
                   <select
                     value={formData.id_group}
                     onChange={(e) => setFormData({ ...formData, id_group: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                   >
                     <option value="">-- Pilih Group --</option>
                     {groupsList.map((g) => (
@@ -1007,7 +1023,7 @@ export default function RevenuePage() {
                   <select
                     value={formData.id_customer}
                     onChange={(e) => setFormData({ ...formData, id_customer: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                   >
                     <option value="">⚠️ On Bench (Idle / Unassigned)</option>
                     {customersList.map((c) => (
@@ -1059,7 +1075,7 @@ export default function RevenuePage() {
                         type="text"
                         readOnly
                         value="Permanent"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 font-extrabold cursor-not-allowed"
+                        className="w-full px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 font-extrabold cursor-not-allowed"
                       />
                     ) : (
                       <input
@@ -1067,7 +1083,7 @@ export default function RevenuePage() {
                         required={formData.start_contract?.toLowerCase() !== 'permanent'}
                         value={formData.start_contract}
                         onChange={(e) => setFormData({ ...formData, start_contract: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                        className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                       />
                     )}
                   </div>
@@ -1081,7 +1097,7 @@ export default function RevenuePage() {
                         type="text"
                         readOnly
                         value="Permanent"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 font-extrabold cursor-not-allowed"
+                        className="w-full px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 font-extrabold cursor-not-allowed"
                       />
                     ) : (
                       <input
@@ -1089,7 +1105,7 @@ export default function RevenuePage() {
                         required={formData.end_contract?.toLowerCase() !== 'permanent'}
                         value={formData.end_contract}
                         onChange={(e) => setFormData({ ...formData, end_contract: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                        className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
                       />
                     )}
                   </div>
@@ -1105,7 +1121,7 @@ export default function RevenuePage() {
                     type="number"
                     value={formData.sallary_gross}
                     onChange={(e) => setFormData({ ...formData, sallary_gross: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                   />
                 </div>
 
@@ -1117,7 +1133,7 @@ export default function RevenuePage() {
                     type="number"
                     value={formData.tunjangan_penempatan}
                     onChange={(e) => setFormData({ ...formData, tunjangan_penempatan: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                   />
                 </div>
 
@@ -1129,7 +1145,7 @@ export default function RevenuePage() {
                     type="number"
                     value={formData.tunjangan_keahlian}
                     onChange={(e) => setFormData({ ...formData, tunjangan_keahlian: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                   />
                 </div>
               </div>
@@ -1142,7 +1158,7 @@ export default function RevenuePage() {
                   <select
                     value={formData.koefisien}
                     onChange={(e) => setFormData({ ...formData, koefisien: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                   >
                     <option value={1.3}>1.3</option>
                     <option value={1.4}>1.4</option>
@@ -1158,12 +1174,12 @@ export default function RevenuePage() {
                     type="number"
                     value={formData.revenue_nett}
                     onChange={(e) => setFormData({ ...formData, revenue_nett: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-extrabold"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-extrabold"
                   />
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={handleCloseModal}
@@ -1186,3 +1202,4 @@ export default function RevenuePage() {
     </div>
   );
 }
+

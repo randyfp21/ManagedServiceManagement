@@ -56,12 +56,7 @@ func InitDB() *gorm.DB {
 		log.Fatalf("Fatal Error: Could not connect to local PostgreSQL database: %v", err)
 	}
 
-	if err := DB.AutoMigrate(&models.User{}, &models.Group{}, &models.Customer{}, &models.PersonalNote{}, &models.AuditLog{}, &models.AssignmentHistory{}, &models.Employee{}); err != nil {
-		log.Fatalf("Fatal Error: Failed to auto-migrate PostgreSQL database: %v", err)
-	}
-
-	log.Println("PostgreSQL Database connection and migration established successfully.")
-	SeedData(DB)
+	log.Println("PostgreSQL Database connection established successfully.")
 	return DB
 }
 

@@ -25,9 +25,13 @@ type DashboardOverview struct {
 }
 
 type CustomerDistributionItem struct {
-	IDCustomer    uint   `json:"id_customer"`
-	CustomerName  string `json:"customer_name"`
-	EmployeeCount int64  `json:"employee_count"`
+	IDCustomer         uint    `json:"id_customer"`
+	CustomerName       string  `json:"customer_name"`
+	EmployeeCount      int64   `json:"employee_count"`
+	TotalRevenue       float64 `json:"total_revenue"`
+	TotalCOGS          float64 `json:"total_cogs"`
+	TotalMarginNominal float64 `json:"total_margin_nominal"`
+	MarginPct          float64 `json:"margin_pct"`
 }
 
 type RoleSummaryItem struct {
@@ -104,29 +108,54 @@ func GetCustomerDistribution(c *gin.Context) {
 
 	var distribution []CustomerDistributionItem
 	for _, cust := range customers {
-		var count int64
+		var emps []models.Employee
 		database.DB.Session(&gorm.Session{}).Model(&models.Employee{}).
 			Where("(status = ? OR status IS NULL OR status = '') AND id_customer = ?", "Active", cust.IDCustomer).
-			Count(&count)
+			Find(&emps)
+
+		var totalRev, totalCogs float64
+		for _, e := range emps {
+			calc := models.CalculateRevenueDetails(e)
+			totalRev += calc.RevenueNett
+			totalCogs += calc.COGS
+		}
+		marginNom := totalRev - totalCogs
+		var marginPct float64
+		if totalRev > 0 {
+			marginPct = (marginNom / totalRev) * 100.0
+		}
 
 		distribution = append(distribution, CustomerDistributionItem{
-			IDCustomer:    cust.IDCustomer,
-			CustomerName:  cust.CustomerName,
-			EmployeeCount: count,
+			IDCustomer:         cust.IDCustomer,
+			CustomerName:       cust.CustomerName,
+			EmployeeCount:      int64(len(emps)),
+			TotalRevenue:       totalRev,
+			TotalCOGS:          totalCogs,
+			TotalMarginNominal: marginNom,
+			MarginPct:          marginPct,
 		})
 	}
 
 	// Add On-Bench group as well for complete chart visualization
-	var benchCount int64
+	var benchEmps []models.Employee
 	database.DB.Session(&gorm.Session{}).Model(&models.Employee{}).
 		Where("(status = ? OR status IS NULL OR status = '') AND (id_customer IS NULL OR id_customer = 0)", "Active").
-		Count(&benchCount)
+		Find(&benchEmps)
 
-	if benchCount > 0 {
+	if len(benchEmps) > 0 {
+		var totalCogs float64
+		for _, e := range benchEmps {
+			calc := models.CalculateRevenueDetails(e)
+			totalCogs += calc.COGS
+		}
 		distribution = append(distribution, CustomerDistributionItem{
-			IDCustomer:    0,
-			CustomerName:  "On Bench (Unassigned)",
-			EmployeeCount: benchCount,
+			IDCustomer:         0,
+			CustomerName:       "On Bench (Unassigned)",
+			EmployeeCount:      int64(len(benchEmps)),
+			TotalRevenue:       0,
+			TotalCOGS:          totalCogs,
+			TotalMarginNominal: -totalCogs,
+			MarginPct:          0,
 		})
 	}
 
