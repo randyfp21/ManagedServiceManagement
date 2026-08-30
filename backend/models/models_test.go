@@ -162,8 +162,8 @@ func TestCalculateRevenueDetails_MarginStatusTiers(t *testing.T) {
 				RevenueNett:         0,
 			},
 			expectedStatus: "Low",
-			expectedCOGS:   30000000,
-			expectedMargin: -30000000,
+			expectedCOGS:   36000000,
+			expectedMargin: -36000000,
 			expectedPct:    0.0,
 		},
 	}

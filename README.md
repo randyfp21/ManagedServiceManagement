@@ -8,8 +8,8 @@ A comprehensive Resource Management & Profitability Tracking System designed for
 
 | Component | Default URL / Port | Description |
 |---|---|---|
-| **Backend API** | `http://localhost:8080` | Go (Gin Framework) REST API (configurable via `PORT` environment variable) |
-| **Frontend Web App** | `http://localhost:3001` | React + Vite Single Page Application (with automatic proxy for `/api` to port 8080) |
+| **Backend API** | `http://localhost:7070` | Go (Gin Framework) REST API (configurable via `PORT` environment variable) |
+| **Frontend Web App** | `http://localhost:3001` | React + Vite Single Page Application (with automatic proxy for `/api` to port 7070) |
 
 ---
 
@@ -91,7 +91,7 @@ cd backend
 # 2. Run backend (Dependencies will be auto-resolved)
 go run main.go
 ```
-*Backend server will start listening on `http://localhost:8080`.*
+*Backend server will start listening on `http://localhost:7070`.*
 
 ---
 

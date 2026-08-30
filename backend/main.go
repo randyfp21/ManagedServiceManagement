@@ -103,7 +103,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "7070"
 	}
 
 	log.Printf("Starting Resource Management System backend server on port %s...", port)
